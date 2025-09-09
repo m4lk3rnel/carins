@@ -1,7 +1,10 @@
 package com.example.carins.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
+
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "insurancepolicy")
@@ -14,7 +17,12 @@ public class InsurancePolicy {
 
     private String provider;
     private LocalDate startDate;
-    private LocalDate endDate; // nullable == open-ended
+
+    @NotNull(message="endDate must not be null") // - JPA level
+    @Column(nullable = false) // - Database level
+    // endDate is now enforced. It can't be null.
+
+    private LocalDate endDate; 
 
     public InsurancePolicy() {}
     public InsurancePolicy(Car car, String provider, LocalDate startDate, LocalDate endDate) {
