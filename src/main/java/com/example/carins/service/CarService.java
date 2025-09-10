@@ -33,7 +33,7 @@ public class CarService {
 
         // TODO: optionally throw NotFound if car does not exist
         Optional<Car> car = getCar(carId);
-        if (car.isEmpty()) { return false; }
+        if (car.isEmpty()) return false; 
 
         return policyRepository.existsActiveOnDate(carId, date);
     }

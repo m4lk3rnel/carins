@@ -23,6 +23,7 @@ public class InsurancePolicy {
     // endDate is now enforced. It can't be null.
 
     private LocalDate endDate; 
+    private boolean notified = false;
 
     public InsurancePolicy() {}
     public InsurancePolicy(Car car, String provider, LocalDate startDate, LocalDate endDate) {
@@ -38,4 +39,6 @@ public class InsurancePolicy {
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public boolean isNotified (boolean notified) { return notified; }
+    public void setNotified (boolean notified) { this.notified = notified; }
 }

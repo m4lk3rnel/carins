@@ -50,20 +50,15 @@ public class CarController {
 
     @GetMapping("/cars/{carId}/insurance-valid")
     public ResponseEntity<?> isInsuranceValid(@PathVariable Long carId, @RequestParam String date) {
-        Optional<Car> car = carService.getCar(carId);
-        if(car.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
 
         // TODO: validate date format and handle errors consistently
         try {
             LocalDate d = LocalDate.parse(date);
 
             if (d.isBefore(LocalDate.of(1900, 1, 1)) ||
-                d.isAfter(LocalDate.of(2100, 12, 31))) {
+                d.isAfter(LocalDate.of(2100, 12, 31))) 
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Date is out of supported range (1900-2100)."));
-            }
 
             boolean valid = carService.isInsuranceValid(carId, d);
 
@@ -79,9 +74,7 @@ public class CarController {
     public ResponseEntity<?> getHistory(@PathVariable Long carId) {
 
         Optional<Car> car = carService.getCar(carId);
-        if(car.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        if(car.isEmpty()) return ResponseEntity.notFound().build();
 
         List<HistoryDto> history = historyService.getCarHistory(carId);
 
@@ -93,9 +86,7 @@ public class CarController {
     public ResponseEntity<?> registerClaim(@PathVariable Long carId, @Valid @RequestBody ClaimDto claimDto) {
 
         Optional<Car> car = carService.getCar(carId);
-        if(car.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        if(car.isEmpty()) return ResponseEntity.notFound().build(); 
 
         Claim claim = claimService.registerClaim(carId, claimDto);
 
