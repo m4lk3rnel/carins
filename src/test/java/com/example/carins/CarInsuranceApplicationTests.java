@@ -1,5 +1,6 @@
 package com.example.carins;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
-import static org.hamcrest.Matchers.nullValue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -119,5 +119,23 @@ class CarInsuranceApplicationTests {
             .andExpect(status().isNotFound());
     }
 
-    //TODO: COMMIT AND PUSH THE CHANGES
+    @Test
+    void checkInsuranceIsValidForNonExistentCarReturns404() throws Exception {
+        mockMvc.perform(get("/api/cars/{carId}/insurance-valid?date=2025-03-13", 999L))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test 
+    void checkInsuranceIsValidInvalidDateFormatReturns400() throws Exception {
+        mockMvc.perform(get("/api/cars/{carId}/insurance-valid?date=13-2021-02", 1L))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Invalid date."));
+    }
+
+    @Test 
+    void checkInsuranceIsValidImpossibleDateReturns400() throws Exception {
+        mockMvc.perform(get("/api/cars/{carId}/insurance-valid?date=1897-02-01", 1L))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Date is out of supported range (1900-2100)."));
+    }
 }

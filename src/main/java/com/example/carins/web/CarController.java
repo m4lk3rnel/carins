@@ -1,17 +1,6 @@
 package com.example.carins.web;
 
 import java.net.URI;
-import java.text.DateFormat;
-
-import com.example.carins.model.Car;
-import com.example.carins.service.CarService;
-import com.example.carins.service.ClaimService;
-import com.example.carins.service.HistoryService;
-import com.example.carins.web.dto.CarDto;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
@@ -19,9 +8,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.example.carins.model.Car;
 import com.example.carins.model.Claim;
+import com.example.carins.service.CarService;
+import com.example.carins.service.ClaimService;
+import com.example.carins.service.HistoryService;
+import com.example.carins.web.dto.CarDto;
 import com.example.carins.web.dto.ClaimDto;
 import com.example.carins.web.dto.HistoryDto;
 
@@ -48,10 +50,21 @@ public class CarController {
 
     @GetMapping("/cars/{carId}/insurance-valid")
     public ResponseEntity<?> isInsuranceValid(@PathVariable Long carId, @RequestParam String date) {
+        Optional<Car> car = carService.getCar(carId);
+        if(car.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
 
         // TODO: validate date format and handle errors consistently
         try {
             LocalDate d = LocalDate.parse(date);
+
+            if (d.isBefore(LocalDate.of(1900, 1, 1)) ||
+                d.isAfter(LocalDate.of(2100, 12, 31))) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Date is out of supported range (1900-2100)."));
+            }
+
             boolean valid = carService.isInsuranceValid(carId, d);
 
             if (!valid) return ResponseEntity.notFound().build();
