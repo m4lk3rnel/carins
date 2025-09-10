@@ -1,18 +1,36 @@
 package com.example.carins;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.nullValue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.carins.model.*;
+import com.example.carins.model.Car;
+import com.example.carins.model.InsurancePolicy;
+import com.example.carins.repo.CarRepository;
+import com.example.carins.repo.InsurancePolicyRepository;
 import com.example.carins.service.CarService;
-import com.example.carins.repo.*;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 class CarInsuranceApplicationTests {
+
+    @Autowired
+    private MockMvc mockMvc;
 
     @Autowired
     CarRepository carRepository;
@@ -47,4 +65,59 @@ class CarInsuranceApplicationTests {
         String exceptionMessage = exception.getMessage();
         assertTrue(exceptionMessage.contains("endDate"));
     }
+
+    @Test
+    void registerClaimShouldReturn201() throws Exception {
+        String json = """
+            {
+                "claimDate": "2025-08-13",
+                "description": "Front bumper repair",
+                "amount": 1234.56
+            }
+        """;
+
+        mockMvc.perform(post("/api/cars/{carId}/claim", 1L)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
+        .andExpect(status().isCreated())
+        .andExpect(header().exists("Location"))
+        .andExpect(jsonPath("$.claimDate").value("2025-08-13"))
+        .andExpect(jsonPath("$.description").value("Front bumper repair"))
+        .andExpect(jsonPath("$.amount").value(1234.56));
+    }
+
+    @Test
+    void registerClaimWithoutAmountShouldReturn400() throws Exception {
+        String json = """
+            {
+                "claimDate": "2025-08-13",
+                "description": "Front bumper repair"
+            }
+        """;
+
+        mockMvc.perform(post("/api/cars/{carId}/claim", 1L)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(json))
+        .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getCarHistoryReturnsHistoryList() throws Exception {
+        mockMvc.perform(get("/api/cars/{carId}/history", 1L))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].eventType").exists())
+            .andExpect(jsonPath("$[0].eventDate").exists())
+            .andExpect(jsonPath("$[0].description", nullValue())) 
+            .andExpect(jsonPath("$[0].amount", nullValue())) 
+            .andExpect(jsonPath("$[0].provider").value("Allianz"));
+    }
+
+    @Test
+    void getCarHistoryForNonExistentCarReturns404() throws Exception {
+        mockMvc.perform(get("/api/cars/{carId}/history", 999L))
+            .andExpect(status().isNotFound());
+    }
+
+    //TODO: COMMIT AND PUSH THE CHANGES
 }
